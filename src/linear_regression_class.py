@@ -10,6 +10,22 @@ class LinearRegression:
     def mean_square_error(self, y_pred: np.array) -> float:
         square_error_mean_short = np.mean((self.y - y_pred) ** 2)
         return square_error_mean_short
+    
+    def step(self, w:np.array, b:float) -> np.array:
+        y_diff: np.array = self.predict(w,b) - self.y
+        w_steps: list = []
+        for i in range(self.X.shape[1]):
+            w_step: float = 0.01 * np.sum(-2 * (self.X[:, i]) * y_diff)
+            w_steps.append(w_step)
+
+        w_steps = np.array(w_steps)
+        b_step = np.sum(-2 * y_diff)
+
+        w: np.array = w + w_steps
+        b: np.array = b + b_step
+
+        return w, b
+
 
     def predict(self, w:np.array, b:float) -> np.array:
         w = w.reshape((self.X.shape[1], 1))
