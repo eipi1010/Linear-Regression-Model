@@ -1,35 +1,55 @@
 from imports import *
+from typing import Tuple, Union
 
 class LinearRegression:
-    def __init__(self, X: pd.DataFrame, y: pd.Series):
-        self.X = np.asarray(X).reshape(len(X), len(X.axes[1]))
-        self.y = np.asarray(y).reshape(len(y), 1)
-    def optimal_weights(self) -> pd.Series:
-        pass
+    def __init__(self, X_train: pd.DataFrame, y_train: pd.Series, w: np.ndarray, b:float, X_test: pd.DataFrame):
+        self.X_train = np.asarray(X_train).reshape(len(X_train), len(X_train.axes[1]))
+        self.y_train = np.asarray(y_train).reshape(len(y_train), 1)
+        self.w = w.reshape(w.shape[0], 1)
+        self.b = b
+        self.X_test = np.asarray(X_test).reshape(len(X_test), len(X_test.axes[1]))
 
-    def mean_square_error(self, y_pred: np.array) -> float:
-        square_error_mean_short = np.mean((self.y - y_pred) ** 2)
+    def mean_square_error(self) -> float:
+        square_error_mean_short = np.mean((self.y_train - self.predict()) ** 2)
         return square_error_mean_short
     
-    def step(self, w:np.array, b:float) -> np.array:
-        y_diff: np.array = self.predict(w,b) - self.y
-        w_steps: list = []
-        for i in range(self.X.shape[1]):
-            w_step: float = 0.01 * np.sum(-2 * (self.X[:, i]) * y_diff)
-            w_steps.append(w_step)
+    def get_weights(self) -> Tuple[np.ndarray, float]:
+        iter = 1
+        step_size = 1
+        while step_size > 0.0001:
+            print(self.mean_square_error())
+            step_size = self.step(lr=1e-4)
+            iter += 1
+        print(iter)
 
-        w_steps = np.array(w_steps)
-        b_step = np.sum(-2 * y_diff)
+        return self.w, self.b
 
-        w: np.array = w + w_steps
-        b: np.array = b + b_step
+    def step(self, lr:float) -> float:
+        y_diff: np.ndarray = self.predict() - self.y_train
+        w_steps = -lr * 2 * (self.X_train.T @ y_diff)
+        b_step = -lr * 2 * np.sum(y_diff)
 
-        return w, b
+        self.w = self.w + w_steps
+        self.b = self.b + b_step
 
+        step_size: float = (np.sum(w_steps) + b_step) / (w_steps.shape[0] + 1)
 
-    def predict(self, w:np.array, b:float) -> np.array:
-        w = w.reshape((self.X.shape[1], 1))
-        y_pred: np.array = self.X @ w + b
+        return step_size
+
+    def predict(self, X: Union[None, pd.DataFrame] = None) -> np.ndarray:
+        if X is None:
+            X = self.X_train
+
+        y_pred: np.ndarray = X @ self.w + self.b
         return y_pred
+    
+    def submit(self) -> pd.Series:
+        output = self.predict(self.X_test)
+        return pd.Series(output.ravel())
+
+    
+
+    
+
 
         
