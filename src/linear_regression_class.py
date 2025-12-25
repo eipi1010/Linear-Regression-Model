@@ -16,7 +16,7 @@ class LinearRegression:
     def get_weights(self) -> Tuple[np.ndarray, float]:
         iter = 1
         step_size = 1
-        while step_size > 0.0001:
+        while step_size > 0.0001 and iter <= 5:
             print(self.mean_square_error())
             step_size = self.step(lr=1e-4)
             iter += 1
@@ -26,13 +26,13 @@ class LinearRegression:
 
     def step(self, lr:float) -> float:
         y_diff: np.ndarray = self.predict() - self.y_train
-        w_steps = -lr * 2 * (self.X_train.T @ y_diff)
-        b_step = -lr * 2 * np.sum(y_diff)
+        w_steps = -lr * 2 * (self.X_train.T @ y_diff) /self.X_train.shape[1]
+        b_step = -lr * 2 * np.mean(y_diff)
 
         self.w = self.w + w_steps
         self.b = self.b + b_step
 
-        step_size: float = (np.sum(w_steps) + b_step) / (w_steps.shape[0] + 1)
+        step_size: float = (np.sum(abs(w_steps)) + abs(b_step)) / (w_steps.shape[0] + 1)
 
         return step_size
 
